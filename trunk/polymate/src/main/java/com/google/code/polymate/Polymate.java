@@ -91,11 +91,11 @@ public class Polymate {
 			tx.success();
 			injectNode(object, node);
 		} catch (IllegalArgumentException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			throw new RuntimeException(
+					"Each entity class must have an @Id-property of the Type "
+							+ ObjectId.class.getName());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
 		} finally {
 			tx.finish();
 		}
@@ -123,11 +123,11 @@ public class Polymate {
 				injectNode(obj, node);
 				results.add(obj);
 			} catch (IllegalArgumentException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				throw new RuntimeException(
+						"Each entity class must have an @Id-property of the Type "
+								+ ObjectId.class.getName());
+			} catch (Exception e) {
+				throw new RuntimeException(e);
 			}
 		}
 		return results;
@@ -153,7 +153,6 @@ public class Polymate {
 			}
 		}
 		return null;
-
 	}
 
 	private <T> ObjectId getIdValue(T object) throws IllegalArgumentException,
@@ -170,7 +169,11 @@ public class Polymate {
 			nodeField.setAccessible(true);
 			nodeField.set(object, node);
 		} else {
-			// TODO throw exception
+			throw new RuntimeException("Each class that shall be saved with "
+					+ Polymate.class.getSimpleName()
+					+ " must declare a field of the type "
+					+ Node.class.getName() + " annotated with "
+					+ UnderlyingNode.class.getName());
 		}
 	}
 
