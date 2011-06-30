@@ -27,7 +27,7 @@ import com.mongodb.MongoException;
 
 /**
  * 
- * TODO javadoc
+ * Test-case for basic CRUD operations with Polymate.
  * 
  * <br>
  * <br>
@@ -40,7 +40,7 @@ import com.mongodb.MongoException;
 public class CRUDTests {
 
 	private static final String NEO_DB_DIR = "test";
-	private static final String MONGO_DB_NAME = NEO_DB_DIR;
+	private static final String MONGO_DB_NAME = "test";
 	private Mongo mongo;
 	private Morphia morphia;
 	private EmbeddedGraphDatabase neo;
@@ -71,7 +71,7 @@ public class CRUDTests {
 		Customer customer = new Customer();
 		customer.setName("A Customer");
 		Long start = System.currentTimeMillis();
-		polymate.add(customer);
+		assertNotNull(polymate.add(customer));
 		System.out.println("Took: " + (System.currentTimeMillis() - start));
 
 		start = System.currentTimeMillis();
