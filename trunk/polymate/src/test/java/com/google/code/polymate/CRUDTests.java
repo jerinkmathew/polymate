@@ -87,6 +87,7 @@ public class CRUDTests {
 		assertEquals(customer.getName(), customer2.getName());
 	}
 
+	@Test
 	public void testAddAllCustomers() {
 		List<Customer> customers = new ArrayList<Customer>();
 		Long start = System.currentTimeMillis();
