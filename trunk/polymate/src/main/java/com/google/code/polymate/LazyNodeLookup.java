@@ -25,6 +25,7 @@ public class LazyNodeLookup<T> implements Node {
 
 	public LazyNodeLookup(Index<Node> mongoIdIndex, T parent) {
 		this.mongoIdIndex = mongoIdIndex;
+		this.parent = parent;
 	}
 
 	private Node node() {
