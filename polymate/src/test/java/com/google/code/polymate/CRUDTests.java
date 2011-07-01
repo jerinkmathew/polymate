@@ -7,19 +7,23 @@
  */
 package com.google.code.polymate;
 
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+
 import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.neo4j.kernel.EmbeddedGraphDatabase;
-import static org.junit.Assert.*;
 
 import com.google.code.morphia.Morphia;
-import com.google.code.polymate.Polymate;
 import com.google.code.polymate.model.Customer;
 import com.google.code.polymate.model.Order;
 import com.mongodb.Mongo;
@@ -67,13 +71,11 @@ public class CRUDTests {
 
 	@Test
 	public void testAddCustomer() {
-
-		Customer customer = new Customer();
-		customer.setName("A Customer");
 		Long start = System.currentTimeMillis();
+		Customer customer = new Customer();
+		customer.setName("Test Customer");
 		assertNotNull(polymate.add(customer));
 		System.out.println("Took: " + (System.currentTimeMillis() - start));
-
 		start = System.currentTimeMillis();
 		Iterable<Customer> result = polymate.find(Customer.class);
 		System.out.println("Took: " + (System.currentTimeMillis() - start));
@@ -83,6 +85,26 @@ public class CRUDTests {
 		Customer customer2 = result.iterator().next();
 		assertNotNull(customer2);
 		assertEquals(customer.getName(), customer2.getName());
+	}
+
+	public void testAddAllCustomers() {
+		List<Customer> customers = new ArrayList<Customer>();
+		Long start = System.currentTimeMillis();
+		for (int i = 1; i <= 10000; i++) {
+			Customer customer = new Customer();
+			customer.setName("Customer_" + i);
+			customers.add(customer);
+		}
+		polymate.addAll(customers);
+		System.out.println("Took: " + (System.currentTimeMillis() - start));
+		start = System.currentTimeMillis();
+		Iterable<Customer> result = polymate.find(Customer.class);
+		System.out.println("Took: " + (System.currentTimeMillis() - start));
+
+		assertNotNull(result);
+		assertTrue(result.iterator().hasNext());
+		Customer customer2 = result.iterator().next();
+		assertNotNull(customer2);
 	}
 
 	@Test

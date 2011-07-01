@@ -79,17 +79,9 @@ public class Polymate {
 	 *         TODO or null, if an error occured.
 	 */
 	public <T> T add(T object) {
-		ds.save(object);
 		Transaction tx = neo.beginTx();
 		try {
-			Node node = neo.createNode();
-			ObjectId idValue = getIdValue(object);
-			node.setProperty("mongoId", idValue.toString());
-			mongoIdIndex.add(node, "mongoId", idValue.toString());
-			node.createRelationshipTo(getClassNode(object.getClass()),
-					Relation.HAS_CLASS);
-			tx.success();
-			injectNode(object, node);
+			return add(object, tx);
 		} catch (IllegalArgumentException e) {
 			throw new RuntimeException(
 					"Each entity class must have an @Id-property of the Type "
@@ -99,6 +91,44 @@ public class Polymate {
 		} finally {
 			tx.finish();
 		}
+	}
+
+	/**
+	 * TODO
+	 * 
+	 * @param <T>
+	 * @param objects
+	 */
+	public <T> void addAll(List<T> objects) {
+		Transaction tx = neo.beginTx();
+		try {
+			for (T obj : objects) {
+				add(obj, tx);
+			}
+		} catch (IllegalArgumentException e) {
+			throw new RuntimeException(
+					"Each entity class must have an @Id-property of the Type "
+							+ ObjectId.class.getName());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		} finally {
+			tx.finish();
+		}
+	}
+
+	private <T> T add(T object, Transaction tx)
+			throws IllegalArgumentException, IllegalAccessException {
+		// TODO handle Node creation failure
+		ds.save(object);
+		Node node = neo.createNode();
+		ObjectId idValue = getIdValue(object);
+		node.setProperty("mongoId", idValue.toString());
+		mongoIdIndex.add(node, "mongoId", idValue.toString());
+		node.createRelationshipTo(getClassNode(object.getClass()),
+				Relation.HAS_CLASS);
+		tx.success();
+		injectNode(object, node,
+				getAnnotatedField(object.getClass(), UnderlyingNode.class));
 		return object;
 	}
 
@@ -115,12 +145,15 @@ public class Polymate {
 	 */
 	public <T> Iterable<T> find(Class<T> clazz) {
 		List<T> results = new ArrayList<T>();
-		for (T obj : ds.find(clazz)) {
+		Field nodeField = getAnnotatedField(clazz, UnderlyingNode.class);
+		for (T obj : ds.find(clazz).asList()) {
 			try {
-				ObjectId idValue = getIdValue(obj);
-				Node node = mongoIdIndex.get("mongoId", idValue.toString())
-						.getSingle();
-				injectNode(obj, node);
+				// ObjectId idValue = getIdValue(obj);
+				// Node node = mongoIdIndex.get("mongoId", idValue.toString())
+				// .getSingle();
+				// injectNode(obj, node, nodeField);
+				injectNode(obj, new LazyNodeLookup<T>(mongoIdIndex, obj),
+						nodeField);
 				results.add(obj);
 			} catch (IllegalArgumentException e) {
 				throw new RuntimeException(
@@ -145,9 +178,9 @@ public class Polymate {
 		return clazzNode;
 	}
 
-	private <T> Field getAnnotatedField(T object,
+	private <T> Field getAnnotatedField(Class<?> clazz,
 			Class<? extends Annotation> annotation) {
-		for (Field field : object.getClass().getDeclaredFields()) {
+		for (Field field : clazz.getDeclaredFields()) {
 			if (field.isAnnotationPresent(annotation)) {
 				return field;
 			}
@@ -157,14 +190,13 @@ public class Polymate {
 
 	private <T> ObjectId getIdValue(T object) throws IllegalArgumentException,
 			IllegalAccessException {
-		Field idField = getAnnotatedField(object, Id.class);
+		Field idField = getAnnotatedField(object.getClass(), Id.class);
 		idField.setAccessible(true);
 		return (ObjectId) idField.get(object);
 	}
 
-	private <T> void injectNode(T object, Node node)
+	private <T> void injectNode(T object, Node node, Field nodeField)
 			throws IllegalArgumentException, IllegalAccessException {
-		Field nodeField = getAnnotatedField(object, UnderlyingNode.class);
 		if (nodeField != null) {
 			nodeField.setAccessible(true);
 			nodeField.set(object, node);
