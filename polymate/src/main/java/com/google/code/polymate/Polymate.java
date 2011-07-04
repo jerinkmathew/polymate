@@ -118,15 +118,18 @@ public class Polymate {
 			throws IllegalArgumentException, IllegalAccessException {
 		// TODO handle Node creation failure
 		ds.save(object);
-		Node node = neo.createNode();
-		ObjectId idValue = ReflectionUtils.getIdValue(object);
-		node.setProperty("mongoId", idValue.toString());
-		mongoIdIndex.add(node, "mongoId", idValue.toString());
-		node.createRelationshipTo(getClassNode(object.getClass()),
-				Relation.HAS_CLASS);
-		tx.success();
-		injectNode(object, node, ReflectionUtils.getAnnotatedField(
-				object.getClass(), UnderlyingNode.class));
+		Field nodeField = ReflectionUtils.getAnnotatedField(object.getClass(),
+				UnderlyingNode.class);
+		if (nodeField != null) {
+			Node node = neo.createNode();
+			ObjectId idValue = ReflectionUtils.getIdValue(object);
+			node.setProperty("mongoId", idValue.toString());
+			mongoIdIndex.add(node, "mongoId", idValue.toString());
+			node.createRelationshipTo(getClassNode(object.getClass()),
+					Relation.HAS_CLASS);
+			tx.success();
+			injectNode(object, node, nodeField);
+		}
 		return object;
 	}
 

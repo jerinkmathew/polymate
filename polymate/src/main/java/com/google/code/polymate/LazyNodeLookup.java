@@ -183,7 +183,7 @@ public class LazyNodeLookup<T> implements Node {
 
 	@Override
 	public String toString() {
-		return node().toString();
+		return "" + node;
 	}
 
 	@Override
