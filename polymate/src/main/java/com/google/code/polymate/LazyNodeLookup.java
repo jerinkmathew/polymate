@@ -1,8 +1,5 @@
 package com.google.code.polymate;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-
 import org.bson.types.ObjectId;
 import org.neo4j.graphdb.Direction;
 import org.neo4j.graphdb.GraphDatabaseService;
@@ -14,8 +11,6 @@ import org.neo4j.graphdb.StopEvaluator;
 import org.neo4j.graphdb.Traverser;
 import org.neo4j.graphdb.Traverser.Order;
 import org.neo4j.graphdb.index.Index;
-
-import com.google.code.morphia.annotations.Id;
 
 public class LazyNodeLookup<T> implements Node {
 
@@ -30,36 +25,10 @@ public class LazyNodeLookup<T> implements Node {
 
 	private Node node() {
 		if (node == null) {
-			ObjectId idValue = getIdValue(parent);
+			ObjectId idValue = ReflectionUtils.getIdValue(parent);
 			node = mongoIdIndex.get("mongoId", idValue.toString()).getSingle();
 		}
 		return node;
-	}
-
-	private ObjectId getIdValue(T object) {
-		Field idField = getAnnotatedField(object, Id.class);
-		idField.setAccessible(true);
-		try {
-			return (ObjectId) idField.get(object);
-		} catch (IllegalArgumentException e) {
-			// TODO
-			e.printStackTrace();
-			return null;
-		} catch (IllegalAccessException e) {
-			// TODO
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	private Field getAnnotatedField(T object,
-			Class<? extends Annotation> annotation) {
-		for (Field field : object.getClass().getDeclaredFields()) {
-			if (field.isAnnotationPresent(annotation)) {
-				return field;
-			}
-		}
-		return null;
 	}
 
 	@Override
@@ -97,6 +66,7 @@ public class LazyNodeLookup<T> implements Node {
 		return node().getPropertyKeys();
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public Iterable<Object> getPropertyValues() {
 		return node().getPropertyValues();
