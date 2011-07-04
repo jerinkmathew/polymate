@@ -7,7 +7,6 @@
  */
 package com.google.code.polymate;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,7 +22,6 @@ import org.neo4j.graphdb.index.Index;
 
 import com.google.code.morphia.Datastore;
 import com.google.code.morphia.Morphia;
-import com.google.code.morphia.annotations.Id;
 import com.google.code.polymate.model.Customer;
 import com.google.code.polymate.model.Order;
 import com.mongodb.Mongo;
@@ -121,14 +119,14 @@ public class Polymate {
 		// TODO handle Node creation failure
 		ds.save(object);
 		Node node = neo.createNode();
-		ObjectId idValue = getIdValue(object);
+		ObjectId idValue = ReflectionUtils.getIdValue(object);
 		node.setProperty("mongoId", idValue.toString());
 		mongoIdIndex.add(node, "mongoId", idValue.toString());
 		node.createRelationshipTo(getClassNode(object.getClass()),
 				Relation.HAS_CLASS);
 		tx.success();
-		injectNode(object, node,
-				getAnnotatedField(object.getClass(), UnderlyingNode.class));
+		injectNode(object, node, ReflectionUtils.getAnnotatedField(
+				object.getClass(), UnderlyingNode.class));
 		return object;
 	}
 
@@ -145,7 +143,8 @@ public class Polymate {
 	 */
 	public <T> Iterable<T> find(Class<T> clazz) {
 		List<T> results = new ArrayList<T>();
-		Field nodeField = getAnnotatedField(clazz, UnderlyingNode.class);
+		Field nodeField = ReflectionUtils.getAnnotatedField(clazz,
+				UnderlyingNode.class);
 		for (T obj : ds.find(clazz).asList()) {
 			try {
 				// ObjectId idValue = getIdValue(obj);
@@ -176,23 +175,6 @@ public class Polymate {
 			clazzNodes.put(clazz.getName(), clazzNode);
 		}
 		return clazzNode;
-	}
-
-	private <T> Field getAnnotatedField(Class<?> clazz,
-			Class<? extends Annotation> annotation) {
-		for (Field field : clazz.getDeclaredFields()) {
-			if (field.isAnnotationPresent(annotation)) {
-				return field;
-			}
-		}
-		return null;
-	}
-
-	private <T> ObjectId getIdValue(T object) throws IllegalArgumentException,
-			IllegalAccessException {
-		Field idField = getAnnotatedField(object.getClass(), Id.class);
-		idField.setAccessible(true);
-		return (ObjectId) idField.get(object);
 	}
 
 	private <T> void injectNode(T object, Node node, Field nodeField)
