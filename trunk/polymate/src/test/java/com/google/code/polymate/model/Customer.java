@@ -7,15 +7,16 @@
  */
 package com.google.code.polymate.model;
 
+import java.util.LinkedList;
 import java.util.List;
 
 import org.bson.types.ObjectId;
 import org.neo4j.graphdb.Node;
 
-import com.google.code.morphia.annotations.Embedded;
 import com.google.code.morphia.annotations.Entity;
 import com.google.code.morphia.annotations.Id;
 import com.google.code.morphia.annotations.Transient;
+import com.google.code.polymate.NodeReference;
 import com.google.code.polymate.UnderlyingNode;
 
 /**
@@ -40,8 +41,9 @@ public class Customer {
 	@UnderlyingNode
 	@Transient
 	private Node node;
-
-	private List<Order> orders;
+	@NodeReference(type = Order.class)
+	@Transient
+	private List<Order> orders = new LinkedList<Order>();
 
 	public String getName() {
 		return name;
