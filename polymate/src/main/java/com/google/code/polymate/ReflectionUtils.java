@@ -2,6 +2,8 @@ package com.google.code.polymate;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.bson.types.ObjectId;
 
@@ -13,6 +15,13 @@ public class ReflectionUtils {
 		throw new AssertionError("Do not instantiate!");
 	}
 
+	/**
+	 * TODO Javadoc.
+	 * 
+	 * @param <T>
+	 * @param object
+	 * @return
+	 */
 	public static <T> ObjectId getIdValue(T object) {
 		Field idField = getAnnotatedField(object.getClass(), Id.class);
 		if (idField == null) {
@@ -30,6 +39,16 @@ public class ReflectionUtils {
 		}
 	}
 
+	/**
+	 * TODO Javadoc. Only returns the first field found for the given
+	 * annotation. To retrieve all fields of a class annotated with the given
+	 * annotation, use getAnnotatedFields instead.
+	 * 
+	 * @param <T>
+	 * @param clazz
+	 * @param annotation
+	 * @return
+	 */
 	public static <T> Field getAnnotatedField(Class<?> clazz,
 			Class<? extends Annotation> annotation) {
 		for (Field field : clazz.getDeclaredFields()) {
@@ -38,6 +57,25 @@ public class ReflectionUtils {
 			}
 		}
 		return null;
+	}
+
+	/**
+	 * TODO Javadoc
+	 * 
+	 * @param <T>
+	 * @param clazz
+	 * @param annotation
+	 * @return
+	 */
+	public static <T> Iterable<Field> getAnnotatedFields(Class<?> clazz,
+			Class<? extends Annotation> annotation) {
+		List<Field> annotededFields = new ArrayList<Field>();
+		for (Field field : clazz.getDeclaredFields()) {
+			if (field.isAnnotationPresent(annotation)) {
+				annotededFields.add(field);
+			}
+		}
+		return annotededFields;
 	}
 
 }

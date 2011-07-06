@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.bson.types.ObjectId;
+import org.neo4j.graphdb.DynamicRelationshipType;
 import org.neo4j.graphdb.GraphDatabaseService;
 import org.neo4j.graphdb.Node;
 import org.neo4j.graphdb.Relationship;
@@ -76,10 +77,13 @@ public class Polymate {
 	 * @return the persisted object with it's neo4j-node representation <br />
 	 *         TODO or null, if an error occured.
 	 */
-	public <T> T add(T object) {
+	public <T> T save(T object) {
 		Transaction tx = neo.beginTx();
 		try {
-			return add(object, tx);
+			// TODO handle update of existing datasets
+			T result = add(object);
+			tx.success();
+			return result;
 		} catch (IllegalArgumentException e) {
 			throw new RuntimeException(
 					"Each entity class must have an @Id-property of the Type "
@@ -97,12 +101,13 @@ public class Polymate {
 	 * @param <T>
 	 * @param objects
 	 */
-	public <T> void addAll(List<T> objects) {
+	public <T> void saveAll(List<T> objects) {
 		Transaction tx = neo.beginTx();
 		try {
 			for (T obj : objects) {
-				add(obj, tx);
+				add(obj);
 			}
+			tx.success();
 		} catch (IllegalArgumentException e) {
 			throw new RuntimeException(
 					"Each entity class must have an @Id-property of the Type "
@@ -114,20 +119,51 @@ public class Polymate {
 		}
 	}
 
-	private <T> T add(T object, Transaction tx)
-			throws IllegalArgumentException, IllegalAccessException {
+	private <T, V> T add(T object) throws IllegalArgumentException,
+			IllegalAccessException {
 		// TODO handle Node creation failure
 		ds.save(object);
+
 		Field nodeField = ReflectionUtils.getAnnotatedField(object.getClass(),
 				UnderlyingNode.class);
 		if (nodeField != null) {
+			// create UnderlyingNode
 			Node node = neo.createNode();
 			ObjectId idValue = ReflectionUtils.getIdValue(object);
 			node.setProperty("mongoId", idValue.toString());
 			mongoIdIndex.add(node, "mongoId", idValue.toString());
 			node.createRelationshipTo(getClassNode(object.getClass()),
 					Relation.HAS_CLASS);
-			tx.success();
+
+			// check for NodeReferences
+			Iterable<Field> nodeReferenceFields = ReflectionUtils
+					.getAnnotatedFields(object.getClass(), NodeReference.class);
+			for (Field nodeReferenceField : nodeReferenceFields) {
+				nodeReferenceField.setAccessible(true);
+				Object nodeReferenceFieldValue = nodeReferenceField.get(object);
+				if (nodeReferenceFieldValue != null) {
+					if (nodeReferenceFieldValue instanceof Iterable) {
+						// TODO avoid unchecked cast
+						for (V obj : (Iterable<V>) nodeReferenceFieldValue) {
+							obj = save(obj);
+							Node referencedNode = getNode(obj);
+							if (referencedNode == null) {
+								throw new RuntimeException(
+										"Referenced Classes must have a "
+												+ Node.class.getName()
+												+ "-property annotated with "
+												+ UnderlyingNode.class
+														.getName());
+							}
+							node.createRelationshipTo(referencedNode,
+									DynamicRelationshipType
+											.withName(nodeReferenceField
+													.getName()));
+						}
+					}
+					// handle case of single object references
+				}
+			}
 			injectNode(object, node, nodeField);
 		}
 		return object;
@@ -154,8 +190,12 @@ public class Polymate {
 				// Node node = mongoIdIndex.get("mongoId", idValue.toString())
 				// .getSingle();
 				// injectNode(obj, node, nodeField);
+
 				injectNode(obj, new LazyNodeLookup<T>(mongoIdIndex, obj),
 						nodeField);
+
+				// TODO add LazyList to referenced nodes
+
 				results.add(obj);
 			} catch (IllegalArgumentException e) {
 				throw new RuntimeException(
@@ -201,6 +241,17 @@ public class Polymate {
 			clazzNodes.put((String) clazzNode.getProperty(CLASS_NAME),
 					clazzNode);
 		}
+	}
+
+	private <T> Node getNode(T obj) throws IllegalArgumentException,
+			IllegalAccessException {
+		Field nodeField = ReflectionUtils.getAnnotatedField(obj.getClass(),
+				UnderlyingNode.class);
+		if (nodeField != null) {
+			nodeField.setAccessible(true);
+			return (Node) nodeField.get(obj);
+		}
+		return null;
 	}
 
 }

@@ -74,7 +74,7 @@ public class CRUDTests {
 		Long start = System.currentTimeMillis();
 		Customer customer = new Customer();
 		customer.setName("Test Customer");
-		assertNotNull(polymate.add(customer));
+		assertNotNull(polymate.save(customer));
 		System.out.println("Took: " + (System.currentTimeMillis() - start));
 		start = System.currentTimeMillis();
 		Iterable<Customer> result = polymate.find(Customer.class);
@@ -96,7 +96,7 @@ public class CRUDTests {
 			customer.setName("Customer_" + i);
 			customers.add(customer);
 		}
-		polymate.addAll(customers);
+		polymate.saveAll(customers);
 		System.out.println("Took: " + (System.currentTimeMillis() - start));
 		start = System.currentTimeMillis();
 		Iterable<Customer> result = polymate.find(Customer.class);
@@ -112,7 +112,7 @@ public class CRUDTests {
 	public void testAddOrder() {
 		Order order = new Order();
 		order.setOrderNumber("Order 1");
-		assertNotNull(polymate.add(order));
+		assertNotNull(polymate.save(order));
 
 		Iterable<Order> result = polymate.find(Order.class);
 		assertNotNull(result);
@@ -120,6 +120,44 @@ public class CRUDTests {
 		Order order2 = result.iterator().next();
 		assertNotNull(order2);
 		assertEquals(order.getOrderNumber(), order2.getOrderNumber());
+	}
+
+	@Test
+	public void testAddCustomerWithOrder() {
+		int numberOfOrders = 1;
+
+		Customer customer = new Customer();
+		customer.setName("Test Customer");
+
+		Order order = new Order();
+		order.setOrderNumber("Order_1337");
+
+		customer.getOrders().add(order);
+
+		Customer addedCustomer = polymate.save(customer);
+		assertNotNull(addedCustomer);
+		assertNotNull(addedCustomer.getOrders());
+		assertEquals(numberOfOrders, addedCustomer.getOrders().size());
+	}
+
+	@Test
+	public void testAddCustomerWithMultipleOders() {
+		int numberOfOrders = 10;
+
+		Customer customer = new Customer();
+		customer.setName("Test Customer");
+
+		for (int i = 1; i <= numberOfOrders; i++) {
+			Order order = new Order();
+			order.setOrderNumber("Order_" + i);
+
+			customer.getOrders().add(order);
+		}
+
+		Customer addedCustomer = polymate.save(customer);
+		assertNotNull(addedCustomer);
+		assertNotNull(addedCustomer.getOrders());
+		assertEquals(numberOfOrders, addedCustomer.getOrders().size());
 	}
 
 }
