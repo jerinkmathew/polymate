@@ -9,7 +9,7 @@ import org.bson.types.ObjectId;
 
 import com.google.code.morphia.annotations.Id;
 
-public class ReflectionUtils {
+class ReflectionUtils {
 
 	private ReflectionUtils() {
 		throw new AssertionError("Do not instantiate!");

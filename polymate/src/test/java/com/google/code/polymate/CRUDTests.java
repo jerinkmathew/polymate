@@ -15,6 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
@@ -160,4 +161,26 @@ public class CRUDTests {
 		assertEquals(numberOfOrders, addedCustomer.getOrders().size());
 	}
 
+	@Test
+	public void testFindCustomerWithOrder() {
+		int numberOfOrders = 1;
+
+		Customer customer = new Customer();
+		customer.setName("Test Customer");
+
+		Order order = new Order();
+		order.setOrderNumber("Order_1337");
+
+		customer.getOrders().add(order);
+
+		assertNotNull(polymate.save(customer));
+
+		Iterable<Customer> customers = polymate.find(Customer.class);
+		assertNotNull(customers);
+		Customer currCustomer = customers.iterator().next();
+		List<Order> orders = currCustomer.getOrders();
+		Iterator<Order> iterator = orders.iterator();
+		assertNotNull(iterator);
+
+	}
 }

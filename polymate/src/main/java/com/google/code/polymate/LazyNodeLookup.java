@@ -12,7 +12,7 @@ import org.neo4j.graphdb.Traverser;
 import org.neo4j.graphdb.Traverser.Order;
 import org.neo4j.graphdb.index.Index;
 
-public class LazyNodeLookup<T> implements Node {
+class LazyNodeLookup<T> implements Node {
 
 	transient Index<Node> mongoIdIndex;
 	transient T parent;

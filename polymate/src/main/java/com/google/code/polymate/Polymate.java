@@ -42,6 +42,7 @@ import com.mongodb.Mongo;
  */
 public class Polymate {
 
+	protected static final String MONGO_ID = "mongoId";
 	private static final String CLASS_NAME = "className";
 	// private Mongo mongo;
 	private Morphia morphia;
@@ -60,7 +61,7 @@ public class Polymate {
 		ds = morphia.createDatastore(mongo, mongoDbName);
 
 		// index
-		mongoIdIndex = neo.index().forNodes("mongoId");
+		mongoIdIndex = neo.index().forNodes(MONGO_ID);
 
 		// init existing class-nodes
 		initClazzNodes();
@@ -130,8 +131,8 @@ public class Polymate {
 			// create UnderlyingNode
 			Node node = neo.createNode();
 			ObjectId idValue = ReflectionUtils.getIdValue(object);
-			node.setProperty("mongoId", idValue.toString());
-			mongoIdIndex.add(node, "mongoId", idValue.toString());
+			node.setProperty(MONGO_ID, idValue.toString());
+			mongoIdIndex.add(node, MONGO_ID, idValue.toString());
 			node.createRelationshipTo(getClassNode(object.getClass()),
 					Relation.HAS_CLASS);
 
@@ -180,21 +181,36 @@ public class Polymate {
 	 *            the Class to search for.
 	 * @return all datastore entries of the given Class.
 	 */
-	public <T> Iterable<T> find(Class<T> clazz) {
+	public <T, V> Iterable<T> find(Class<T> clazz) {
 		List<T> results = new ArrayList<T>();
 		Field nodeField = ReflectionUtils.getAnnotatedField(clazz,
 				UnderlyingNode.class);
+		Iterable<Field> nodeRefFields = ReflectionUtils.getAnnotatedFields(
+				clazz, NodeReference.class);
 		for (T obj : ds.find(clazz).asList()) {
 			try {
 				// ObjectId idValue = getIdValue(obj);
 				// Node node = mongoIdIndex.get("mongoId", idValue.toString())
 				// .getSingle();
 				// injectNode(obj, node, nodeField);
-
-				injectNode(obj, new LazyNodeLookup<T>(mongoIdIndex, obj),
-						nodeField);
+				LazyNodeLookup<T> lazyNodeLookup = new LazyNodeLookup<T>(
+						mongoIdIndex, obj);
+				injectNode(obj, lazyNodeLookup, nodeField);
 
 				// TODO add LazyList to referenced nodes
+				for (Field nodeRefField : nodeRefFields) {
+					Class<?> referenceType = nodeRefField.getAnnotation(
+							NodeReference.class).type();
+					nodeRefField.setAccessible(true);
+					Object list = nodeRefField.get(obj);
+					if (list instanceof List) {
+						LazyObjectList lazyObjectIterable = new LazyObjectList(
+								lazyNodeLookup, nodeRefField.getName(), ds,
+								referenceType);
+						nodeRefField.set(obj, lazyObjectIterable);
+					}
+
+				}
 
 				results.add(obj);
 			} catch (IllegalArgumentException e) {
@@ -252,6 +268,10 @@ public class Polymate {
 			return (Node) nodeField.get(obj);
 		}
 		return null;
+	}
+
+	public void get(ObjectId mongoId) {
+
 	}
 
 }
