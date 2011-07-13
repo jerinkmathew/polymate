@@ -16,13 +16,6 @@
 
   <dependencies>
     <dependency>
-    	<groupId>org.neo4j</groupId>
-    	<artifactId>neo4j</artifactId>
-    	<version>1.4.M05</version>
-    	<type>jar</type>
-    	<scope>compile</scope>
-    </dependency>
-    <dependency>
     	<groupId>junit</groupId>
     	<artifactId>junit</artifactId>
     	<version>4.8.2</version>
@@ -33,6 +26,13 @@
     	<groupId>commons-io</groupId>
     	<artifactId>commons-io</artifactId>
     	<version>20030203.000550</version>
+    	<type>jar</type>
+    	<scope>compile</scope>
+    </dependency>
+    <dependency>
+    	<groupId>org.neo4j</groupId>
+    	<artifactId>neo4j</artifactId>
+    	<version>1.4</version>
     	<type>jar</type>
     	<scope>compile</scope>
     </dependency>
