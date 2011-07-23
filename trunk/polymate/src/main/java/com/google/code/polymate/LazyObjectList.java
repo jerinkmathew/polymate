@@ -19,6 +19,7 @@ class LazyObjectList<referenceType> implements List<referenceType> {
 	transient String relationshipName;
 	transient Datastore ds;
 	transient Class<?> referenceType;
+	private List<referenceType> objList = new ArrayList<referenceType>();
 
 	public LazyObjectList(LazyNodeLookup<?> lazyNodeLookup,
 			String relationshipName, Datastore ds, Class<?> referenceType) {
@@ -28,9 +29,7 @@ class LazyObjectList<referenceType> implements List<referenceType> {
 		this.referenceType = referenceType;
 	}
 
-	@Override
-	public Iterator<referenceType> iterator() {
-		List<referenceType> objList = new ArrayList<referenceType>();
+	private List<referenceType> list() {
 		Iterable<Relationship> relationships = lazyNodeLookup
 				.getRelationships(DynamicRelationshipType
 						.withName(relationshipName));
@@ -41,25 +40,27 @@ class LazyObjectList<referenceType> implements List<referenceType> {
 					new ObjectId(mongoId));
 			objList.add(obj);
 		}
-		return objList.iterator();
+		return objList;
+	}
+
+	@Override
+	public Iterator<referenceType> iterator() {
+		return list().iterator();
 	}
 
 	@Override
 	public boolean add(referenceType e) {
-		// TODO Auto-generated method stub
-		return false;
+		return list().add(e);
 	}
 
 	@Override
 	public void add(int index, referenceType element) {
-		// TODO Auto-generated method stub
-
+		list().add(index, element);
 	}
 
 	@Override
 	public boolean addAll(Collection<? extends referenceType> c) {
-		// TODO Auto-generated method stub
-		return false;
+		return list().addAll(c);
 	}
 
 	@Override
@@ -70,110 +71,92 @@ class LazyObjectList<referenceType> implements List<referenceType> {
 
 	@Override
 	public void clear() {
-		// TODO Auto-generated method stub
-
+		list().clear();
 	}
 
 	@Override
 	public boolean contains(Object o) {
-		// TODO Auto-generated method stub
-		return false;
+		return list().contains(o);
 	}
 
 	@Override
 	public boolean containsAll(Collection<?> c) {
-		// TODO Auto-generated method stub
-		return false;
+		return list().containsAll(c);
 	}
 
 	@Override
 	public referenceType get(int index) {
-		// TODO Auto-generated method stub
-		return null;
+		return list().get(index);
 	}
 
 	@Override
 	public int indexOf(Object o) {
-		// TODO Auto-generated method stub
-		return 0;
+		return list().indexOf(o);
 	}
 
 	@Override
 	public boolean isEmpty() {
-		// TODO Auto-generated method stub
-		return false;
+		return list().isEmpty();
 	}
 
 	@Override
 	public int lastIndexOf(Object o) {
-		// TODO Auto-generated method stub
-		return 0;
+		return list().lastIndexOf(o);
 	}
 
 	@Override
 	public ListIterator<referenceType> listIterator() {
-		// TODO Auto-generated method stub
-		return null;
+		return list().listIterator();
 	}
 
 	@Override
 	public ListIterator<referenceType> listIterator(int index) {
-		// TODO Auto-generated method stub
-		return null;
+		return list().listIterator(index);
 	}
 
 	@Override
 	public boolean remove(Object o) {
-		// TODO Auto-generated method stub
-		return false;
+		return list().remove(o);
 	}
 
 	@Override
 	public referenceType remove(int index) {
-		// TODO Auto-generated method stub
-		return null;
+		return list().remove(index);
 	}
 
 	@Override
 	public boolean removeAll(Collection<?> c) {
-		// TODO Auto-generated method stub
-		return false;
+		return list().removeAll(c);
 	}
 
 	@Override
 	public boolean retainAll(Collection<?> c) {
-		// TODO Auto-generated method stub
-		return false;
+		return list().retainAll(c);
 	}
 
 	@Override
 	public referenceType set(int index, referenceType element) {
-		// TODO Auto-generated method stub
-		return null;
+		return list().set(index, element);
 	}
 
 	@Override
 	public int size() {
-		// TODO Auto-generated method stub
-		return 0;
+		return list().size();
 	}
 
 	@Override
 	public List<referenceType> subList(int fromIndex, int toIndex) {
-		// TODO Auto-generated method stub
-		return null;
+		return list().subList(fromIndex, toIndex);
 	}
 
 	@Override
 	public Object[] toArray() {
-		// TODO Auto-generated method stub
-		return null;
+		return list().toArray();
 	}
 
 	@Override
 	public <T> T[] toArray(T[] a) {
-		// TODO Auto-generated method stub
-		return null;
+		return list().toArray(a);
 	}
 
 }

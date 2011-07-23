@@ -179,8 +179,13 @@ public class CRUDTests {
 		assertNotNull(customers);
 		Customer currCustomer = customers.iterator().next();
 		List<Order> orders = currCustomer.getOrders();
-		Iterator<Order> iterator = orders.iterator();
-		assertNotNull(iterator);
-
+		assertNotNull(orders);
+		Long start = System.currentTimeMillis();
+		assertEquals(numberOfOrders, orders.size());
+		System.out.println("Took: " + (System.currentTimeMillis() - start));
+		Order actualOrder = orders.get(0);
+		assertNotNull(actualOrder);
+		assertEquals(order.getOrderNumber(), actualOrder.getOrderNumber());
 	}
+
 }
